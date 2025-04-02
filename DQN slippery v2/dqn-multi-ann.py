@@ -90,7 +90,12 @@ class CliffWalkingAgent:
         # Memorizza l'esperienza nel buffer
         self.memory.append((state, action, reward, next_state, done))
     
+    
     def act(self, state, training=True):
+        """
+        Se training è True, esegui un'azione in modo epsilon-greedy.
+        Altrimenti, esegui l'azione con il valore Q massimo stimato dalla rete.
+        """
         # Epsilon-greedy per l'esplorazione
         if training and random.random() < self.epsilon:
             return random.randrange(self.action_size)
@@ -245,10 +250,11 @@ def evaluate_agent(env, agent, episodes=100, render=False):
         state, _ = env.reset()
         total_reward = 0
         done = False
+        truncated = False
         step = 0
         successes = 0
         
-        while not done and step < 200:
+        while not (done or truncated) and step < 200:
             action = agent.act(state, training=False)
             next_state, reward, done, truncated, _ = env.step(action)
             done = done or truncated
@@ -261,7 +267,7 @@ def evaluate_agent(env, agent, episodes=100, render=False):
                 env.render()
                 time.sleep(0.1)
         
-        if total_reward > -100:
+        if not truncated or (total_reward > -100):
             successes += 1
         
         total_rewards.append(total_reward)

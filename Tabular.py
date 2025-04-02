@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import time
 from tqdm import tqdm
+from SlipperyCliffWalkingEnv import SlipperyCliffWalkingEnv
 
 # Creazione dell'ambiente CliffWalking nella versione slippery
-env = gym.make('CliffWalking-v0', render_mode=None, is_slippery=True)
+env = SlipperyCliffWalkingEnv(slip_chance=0.2)
 
 # Parametri per il Q-learning
 alpha = 0.1       # Tasso di apprendimento
@@ -32,7 +33,7 @@ avg_steps = []
 # Funzione di valutazione dell'agente addestrato
 def evaluate_agent(q_table, num_eval_episodes=100):
     # Ambiente di valutazione (senza rendering)
-    eval_env = gym.make('CliffWalking-v0', render_mode=None, is_slippery=True)
+    eval_env = SlipperyCliffWalkingEnv(slip_chance=0.2)
     
     success_count = 0
     total_rewards = 0
@@ -365,7 +366,7 @@ def test_trained_agent(q_table, num_test_episodes=1000):
     print("="*50)
     
     # Ambiente di test
-    test_env = gym.make('CliffWalking-v0', render_mode=None, is_slippery=True)
+    test_env = SlipperyCliffWalkingEnv(slip_chance=0.2)
     
     # Metriche
     rewards = []
