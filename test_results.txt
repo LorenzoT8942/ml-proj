@@ -1,25 +1,25 @@
 RISULTATI DEL TEST DELL'AGENTE Q-LEARNING
 ==================================================
 Numero di episodi: 1000
-Success Rate: 0.9320 (932/1000)
+Success Rate: 0.9250 (925/1000)
 
 STATISTICHE REWARD:
-Reward Medio: -29.46 ± 27.59
-Reward Minimo: -228.00
+Reward Medio: -30.09 ± 29.74
+Reward Minimo: -234.00
 Reward Massimo: -17.00
 
 STATISTICHE PASSI:
-Passi Medi: 22.43 ± 4.20
+Passi Medi: 22.17 ± 4.04
 Passi Minimi: 17
-Passi Massimi: 46
+Passi Massimi: 49
 
 DISTRIBUZIONE DEI REWARD:
-  -228.0 a -204.6: 0.30%
-  -204.6 a -181.1: 0.00%
-  -181.1 a -157.7: 0.00%
-  -157.7 a -134.2: 0.70%
-  -134.2 a -110.8: 5.80%
-  -110.8 a -87.3: 0.00%
-  -87.3 a -63.9: 0.00%
-  -63.9 a -40.4: 0.00%
-  -40.4 a -17.0: 93.20%
+  -234.0 a -209.9: 0.50%
+  -209.9 a -185.8: 0.00%
+  -185.8 a -161.7: 0.00%
+  -161.7 a -137.6: 0.40%
+  -137.6 a -113.4: 6.60%
+  -113.4 a -89.3: 0.00%
+  -89.3 a -65.2: 0.00%
+  -65.2 a -41.1: 0.10%
+  -41.1 a -17.0: 92.40%

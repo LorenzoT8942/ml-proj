@@ -6,8 +6,12 @@ import time
 from tqdm import tqdm
 from SlipperyCliffWalkingEnv import SlipperyCliffWalkingEnv
 
+custom_env = True
+
 # Creazione dell'ambiente CliffWalking nella versione slippery
-env = SlipperyCliffWalkingEnv(slip_chance=0.2)
+env = SlipperyCliffWalkingEnv(slip_chance=0.2) if custom_env else gym.make('CliffWalking-v0', is_slippery =True)
+
+print(f"Ambiente custom: {custom_env}")
 
 # Parametri per il Q-learning
 alpha = 0.1       # Tasso di apprendimento
@@ -33,7 +37,7 @@ avg_steps = []
 # Funzione di valutazione dell'agente addestrato
 def evaluate_agent(q_table, num_eval_episodes=100):
     # Ambiente di valutazione (senza rendering)
-    eval_env = SlipperyCliffWalkingEnv(slip_chance=0.2)
+    eval_env = SlipperyCliffWalkingEnv(slip_chance=0.2) if custom_env else gym.make('CliffWalking-v0', is_slippery =True)
     
     success_count = 0
     total_rewards = 0

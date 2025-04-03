@@ -11,10 +11,10 @@ from collections import deque
 import time
 import itertools
 import os
-
+custom_env = False
 # Verifica se è disponibile la GPU
-#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = "cpu"
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 print(f"Utilizzo device: {device}")
 
 # Creazione dell'ambiente Cliff Walking Slippery
@@ -89,6 +89,10 @@ class CliffWalkingAgent:
     def remember(self, state, action, reward, next_state, done):
         # Memorizza l'esperienza nel buffer
         self.memory.append((state, action, reward, next_state, done))
+
+    def decay_epsilon(self):
+        # Decay dell'epsilon per l'esplorazione
+        self.epsilon = max(self.epsilon_end, self.epsilon * self.epsilon_decay)
     
     
     def act(self, state, training=True):
@@ -114,11 +118,12 @@ class CliffWalkingAgent:
         return one_hot
     
     def replay(self):
-        # Verifica se ci sono abbastanza esperienze nel buffer
+
+        # Checks if there are enough experiences in memory to sample a batch
         if len(self.memory) < self.batch_size:
             return 0
         
-        # Campiona un batch di esperienze
+        # Extracts a random minibatch of size "batch_size" from memory
         minibatch = random.sample(self.memory, self.batch_size)
         
         states = []
@@ -156,8 +161,7 @@ class CliffWalkingAgent:
         self.optimizer.step()
         
         # Aggiornamento del parametro epsilon
-        if self.epsilon > self.epsilon_end:
-            self.epsilon *= self.epsilon_decay
+        self.decay_epsilon()
             
         return loss.item()
     
@@ -180,6 +184,9 @@ class CliffWalkingAgent:
 
 # Funzione principale di training
 def train_agent(env, agent, episodes, max_steps=200, render_interval=100, early_stop_threshold=None):
+    """
+    Trains the agent in the given environment by calling agent.replay() until the episode ends or the max steps are reached.
+    """
     rewards = []
     losses = []
     epsilon_history = []
@@ -246,13 +253,14 @@ def train_agent(env, agent, episodes, max_steps=200, render_interval=100, early_
 # Funzione per visualizzare l'agente
 def evaluate_agent(env, agent, episodes=100, render=False):
     total_rewards = []
+    successes = 0
+
     for episode in range(episodes):
         state, _ = env.reset()
         total_reward = 0
         done = False
         truncated = False
         step = 0
-        successes = 0
         
         while not (done or truncated) and step < 200:
             action = agent.act(state, training=False)
@@ -267,7 +275,7 @@ def evaluate_agent(env, agent, episodes=100, render=False):
                 env.render()
                 time.sleep(0.1)
         
-        if not truncated or (total_reward > -100):
+        if (total_reward > -100):
             successes += 1
         
         total_rewards.append(total_reward)
@@ -284,7 +292,7 @@ def plot_results(config_results, title="Confronto Configurazioni"):
     
     for config, scores in config_results.items():
         # Calcolo della media mobile per smussare la curva
-        window_size = min(100, len(scores) // 10) if len(scores) > 10 else 1
+        window_size = min(20, len(scores) // 10) if len(scores) > 10 else 1
         moving_avg = np.convolve(scores, np.ones(window_size)/window_size, mode='valid')
         plt.plot(moving_avg, label=f"Config: {config}")
     
@@ -308,9 +316,12 @@ def test_configurations(hidden_layer_configs, episodes_per_config=500, training_
             'buffer_size': 2000,
             'batch_size': 64
         }
+
+    print(f"Starting training with parameters {training_params}")
     
     results = {}
     evaluation_scores = {}
+
     
     # Creazione della directory per i modelli se non esiste
     models_dir = "cliff_models"
@@ -324,7 +335,7 @@ def test_configurations(hidden_layer_configs, episodes_per_config=500, training_
         print(f"{'='*50}")
         
         # Creazione dell'ambiente
-        env = SlipperyCliffWalkingEnv(slip_chance=0.2)
+        env = SlipperyCliffWalkingEnv(slip_chance=0.2) if custom_env else gym.make('CliffWalking-v0', is_slippery =True)
         
         # Inizializzazione dell'agente
         state_size = env.observation_space.n
@@ -341,7 +352,7 @@ def test_configurations(hidden_layer_configs, episodes_per_config=500, training_
             episodes=episodes_per_config, 
             max_steps=200, 
             render_interval=100,
-            early_stop_threshold=50  # Ferma se non c'è miglioramento per 50 episodi
+            early_stop_threshold=None  # Ferma se non c'è miglioramento per 50 episodi
         )
         
         # Salvataggio del modello
@@ -388,7 +399,9 @@ if __name__ == "__main__":
                # Due layer con stessa dimensione
         [128, 128],            # Due layer 128
                  # Tre layer 32
-        [64, 64, 64]     # Tre layer 64
+        [64, 64],
+        [32, 32]     # Tre layer 64
+
     ]
     
     print("Inizio test delle configurazioni degli hidden layers...")
@@ -399,9 +412,9 @@ if __name__ == "__main__":
         'gamma': 0.99,
         'epsilon_start': 1.0,
         'epsilon_end': 0.01,
-        'epsilon_decay': 0.995,
-        'buffer_size': 2000,
-        'batch_size': 64
+        'epsilon_decay': 0.9999,
+        'buffer_size': 1000,
+        'batch_size': 32
     }
     
     # Test di tutte le configurazioni
@@ -431,7 +444,8 @@ if __name__ == "__main__":
     best_config_list = [int(x) for x in best_config.strip('[]').split(', ')]
     
     # Creazione dell'ambiente
-    env = SlipperyCliffWalkingEnv(slip_chance=0.2)
+    env = SlipperyCliffWalkingEnv(slip_chance=0.2) if custom_env else gym.make('CliffWalking-v0', is_slippery =True)
+
     
     # Inizializzazione dell'agente con la migliore configurazione
     state_size = env.observation_space.n
